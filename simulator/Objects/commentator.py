@@ -19,27 +19,29 @@ class Commentator():
         self.bets = []
 
     def commentHealth(self):
-        print(f'{self.name}: Current status:')
+        # print(f'{self.name}: Current status:')
         for item in self.window.getScene().items():
             if isinstance(item, Robot) and item.getHealth() > 0:
-                print(f'{item} health: {item.getHealth()}')
+                # print(f'{item} health: {item.getHealth()}')
+                pass
 
     def commentDeath(self, bot):
-        print(f'{self.name}: {bot} died')
+        # print(f'{self.name}: {bot} died')
         self.commentHealth()
 
     def commentSpotted(self, bot, target):
         if bot in self.spottingDict:
             if target in self.spottingDict[bot]:
                 return
-            print(f'{self.name}: {bot} spotted by {target}')
+            # print(f'{self.name}: {bot} spotted by {target}')
             self.spottingDict[bot].append(target)
             return
         self.spottingDict[bot] = [target]
-        print(f'{self.name}: {bot} spotted by {target}')
+        # print(f'{self.name}: {bot} spotted by {target}')
 
     def commentHit(self, target, attacker, dmg):
-        print(f'{self.name}: {target} was hit by {attacker} for {dmg} damage.')
+        # print(f'{self.name}: {target} was hit by {attacker} for {dmg} damage.')
+        pass
 
     def initBetting(self):
         robs = []
