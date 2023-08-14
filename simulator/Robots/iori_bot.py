@@ -14,6 +14,7 @@ class IoriBot(Robot): #Create a Robot
     leftEnemies = []
     clockwise = 1
     round = 0
+    spottedStep = 0
 
     
     def init(self):# NECESARY FOR THE GAME   To initialyse your robot
@@ -25,7 +26,7 @@ class IoriBot(Robot): #Create a Robot
         self.setBulletsColor(253, 153, 225)
         
         self.radarVisible(True) # show the radarField
-        self.setRadarField("normal")
+        self.setRadarField("thin")
         self.size = self.getMapSize()
         self.getPos = self.getPosition
 
@@ -57,8 +58,7 @@ class IoriBot(Robot): #Create a Robot
 
 
             self.turn(targetDegree)
-            self.radarTurn(targetDegree)
-            self.gunTurn(targetDegree)
+            self.turnRadarAndGun(targetDegree)
 
             self.pause(10)
 
@@ -69,24 +69,20 @@ class IoriBot(Robot): #Create a Robot
             
             return
 
-        self.radarTurn(10) 
-        self.gunTurn(10)
+        self.turnRadarAndGun(self.clockwise*10)
 
         if self.round%4 == 0:
             self.turn(self.round)
             self.move(self.round // 4)
         
     def sensors(self):  #NECESARY FOR THE GAME
-        """Tick each frame to have datas about the game"""
-        
-        # self.pos = self.getPosition() #return the center of the bot
         self.angleGun = self.getGunHeading() #Returns the direction that the robot's gun is facing
         self.angleBot = self.getHeading() #Returns the direction that the robot is facing
         self.angleRadar = self.getRadarHeading() #Returns the direction that the robot's radar is facing
         self.leftEnemies = self.getEnemiesLeft() #return a list of the enemies alive in the battle
         
     def onHitByRobot(self, robotId, robotName):
-        self.rPrint("damn a bot collided me!")
+        pass
 
     def onHitWall(self):
         self.reset() #To reset the run fonction to the begining (auomatically called on hitWall, and robotHit event) 
@@ -96,29 +92,24 @@ class IoriBot(Robot): #Create a Robot
         self.rPrint('ouch! a wall !')
     
     def onRobotHit(self, robotId, robotName): # when My bot hit another
-        self.rPrint('collision with:' + str(robotName)) #Print information in the robotMenu (click on the righ panel to see it)
+        pass
        
     def onHitByBullet(self, bulletBotId, bulletBotName, bulletPower): #NECESARY FOR THE GAME
-        """ When i'm hit by a bullet"""
         self.reset() #To reset the run fonction to the begining (auomatically called on hitWall, and robotHit event) 
         self.move(-20)
-        self.rPrint ("hit by " + str(bulletBotName) + "with power:" +str( bulletPower))
+        self.turn(10)
         
     def onBulletHit(self, botId, bulletId):#NECESARY FOR THE GAME
-        """when my bullet hit a bot"""
-        self.rPrint ("fire done on " +str( botId))
+        pass
 
     def onBulletMiss(self, bulletId):#NECESARY FOR THE GAME
-        """when my bullet hit a wall"""
-        self.rPrint ("the bullet "+ str(bulletId) + " fail")
         self.pause(1) #wait 10 frames
         
     def onRobotDeath(self):#NECESARY FOR THE GAME
-        """When my bot die"""
-        self.rPrint ("damn I'm Dead")
+        pass
     
     def onTargetSpotted(self, botId, botName, botPos):#NECESARY FOR THE GAME
-        "when the bot see another one"
+        self.spottedStep += 1
 
         dx = botPos.x() - self.getPosition().x()
         dy = botPos.y() - self.getPosition().y()
@@ -127,25 +118,32 @@ class IoriBot(Robot): #Create a Robot
 
         try:
             angle = self.calcAngle(botPos.x(), botPos.y())[0]
-        except:
-            self.rPrint("zerodivision")
-            
+        except ZeroDivisionError:
             angle = 180
             if botPos.x() > self.getPosition().x():
                 angle = 0
 
         if distance <= 500:
 
-            weight = 1.12
-            if angle - self.angleRadar > 180:
-                angle = 360 - angle
+            weight = 1
+            angleDiff = angle - self.angleRadar
 
-            self.radarTurn((angle - self.angleRadar)*weight)
-            self.gunTurn((angle - self.angleGun)*weight)
+            if angleDiff > 180:
+                angleDiff -= 360
+            elif angleDiff < -180:
+                angleDiff += 360
 
-            self.fire(5)
+            self.turnRadarAndGun((angleDiff)*weight)
+
+            if self.spottedStep%4 == 0:
+                self.fire(7)
         else:
             self.turn(angle - self.angleBot)
             self.move(distance//3)
 
-        self.rPrint("I see the bot:" + str(botId) + "on position: x:" + str(botPos.x()) + " , y:" + str(botPos.y()))
+        if self.spottedStep%2 == 0:
+            self.clockwise *= -1
+
+    def turnRadarAndGun(self, angle):
+        self.radarTurn(angle)
+        self.gunTurn(angle)
